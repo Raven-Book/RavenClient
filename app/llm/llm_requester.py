@@ -3,6 +3,10 @@ import aiohttp
 from aiohttp import ClientTimeout
 from typing import Optional
 
+from app.logger import logger
+from app.main import app_data
+
+
 async def post_request(
     prompt: str,
     api_url: str,
@@ -42,7 +46,7 @@ async def post_request(
     }
 
     try:
-        async with aiohttp.ClientSession(timeout=ClientTimeout(total=30)) as session:
+        async with app_data.client as session:
             async with session.post(
                     api_url,
                     headers=headers,
@@ -51,15 +55,15 @@ async def post_request(
 
                 # 检查HTTP状态码
                 if response.status != 200:
-                    print(f"API请求失败，状态码：{response.status}")
+                    logger.error(f"API请求失败，状态码：{response.status}")
                     return None
 
                 response_data = await response.json()
 
                 # 检查是否存在预期的响应结构
                 if "choices" not in response_data or len(response_data["choices"]) == 0:
-                    print("无效的API响应结构")
-                    print("完整响应：", response_data)
+                    logger.error("无效的API响应结构")
+                    logger.error("完整响应：", response_data)
                     return None
 
                 if (response_data.get("choices") and
@@ -68,10 +72,10 @@ async def post_request(
                         isinstance(response_data["choices"][0]["message"], dict)):
                     return response_data["choices"][0]["message"].get("content")
     except aiohttp.ClientError as e:
-        print(f"网络请求异常：{str(e)}")
+        logger.error(f"网络请求异常：{str(e)}")
     except ValueError as e:
-        print(f"JSON解析失败：{str(e)}")
+        logger.error(f"JSON解析失败：{str(e)}")
     except Exception as e:
-        print(f"未知错误：{str(e)}")
+        logger.error(f"未知错误：{str(e)}")
 
     return None
