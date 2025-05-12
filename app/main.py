@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 
+from app import routes
+
 app = FastAPI()
-
-
-@app.get("/say")
-def read_root():
-    return {"Hello": "World"}
+routes.register(app)
