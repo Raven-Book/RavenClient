@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Type
+from typing import Type, Optional
 from uuid import uuid4
 
 import bcrypt
