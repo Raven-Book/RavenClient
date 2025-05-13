@@ -1,6 +1,7 @@
 from typing import Optional, List
 from uuid import uuid4
 
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import (
     Column,
     String, Boolean,
@@ -11,6 +12,20 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.model import Base
 from app.util import time
 
+
+# --- 请求响应模型 ---
+class UserRegisterRequest(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponseData(BaseModel):
+    user_id: str
+    username: str
 
 class User(Base):
     __tablename__ = 'user'
