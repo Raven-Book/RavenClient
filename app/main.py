@@ -4,13 +4,13 @@ import toml
 from aiohttp import ClientSession
 from fastapi import FastAPI
 
-from app import routes
+from app import route
 from app.data import app_data
 from app.error.database import UnsupportedDatabaseError
 from app.logger import logger
 from app.model import constants
 from app.model.data import Config, DatabaseManager
-from app.utils.file import new_empty_config
+from app.util.file import new_empty_config
 from app.model import metadata
 
 
@@ -49,4 +49,4 @@ app = FastAPI(
     description="LLM Client",
     lifespan=lifespan
 )
-routes.register(app)
+route.register(app)

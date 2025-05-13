@@ -6,7 +6,7 @@ from sqlalchemy import (
 )
 
 from app.model import metadata
-from app.utils import time
+from app.util import time
 
 Session = Table(
     'session',
