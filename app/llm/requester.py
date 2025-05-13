@@ -1,19 +1,18 @@
-import requests
-import aiohttp
-from aiohttp import ClientTimeout
 from typing import Optional
 
+import aiohttp
+
 from app.logger import logger
-from app.main import app_data
+from app.data import app_data
 
 
 async def post_request(
-    prompt: str,
-    api_url: str,
-    api_key: str,
-    model_id: str,
-    max_tokens: int = 500,
-    temperature: float = 0.7
+        prompt: str,
+        api_url: str,
+        api_key: str,
+        model_id: str,
+        max_tokens: int = 500,
+        temperature: float = 0.7
 ) -> Optional[str]:
     """
     调用OpenAI格式API的通用函数

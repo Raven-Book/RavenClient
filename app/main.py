@@ -5,12 +5,14 @@ from aiohttp import ClientSession
 from fastapi import FastAPI
 
 from app import routes
+from app.data import app_data
+from app.error.database import UnsupportedDatabaseError
 from app.logger import logger
-from app.models import constants
-from app.models.data import Config, AppData
+from app.model import constants
+from app.model.data import Config, DatabaseManager
 from app.utils.file import new_empty_config
+from app.model import metadata
 
-app_data: AppData = AppData()
 
 
 @asynccontextmanager
@@ -20,6 +22,17 @@ async def lifespan(_: FastAPI):
             headers=constants.REQUEST_HEADERS
         )
         app_data.config = Config(**toml.load(constants.CONFIG_FILE))
+
+        database = app_data.config.database
+
+        if database.type not in constants.DB_PATH:
+            raise UnsupportedDatabaseError(database.type)
+
+        db = app_data.db = DatabaseManager(constants.DB_PATH[database.type])
+
+        async with db.engine.begin() as conn:
+            await conn.run_sync(metadata.create_all)
+
         yield
     except FileNotFoundError:
         logger.info(f"Not found config file, waiting for creation... ")

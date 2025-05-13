@@ -4,8 +4,8 @@ import sys
 import toml
 
 from app.logger import logger
-from app.models import constants
-from app.models.data import Config, AppData
+from app.model import constants
+from app.model.data import Config, AppData
 
 
 def get_app_path() -> str:

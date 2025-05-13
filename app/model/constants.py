@@ -15,6 +15,13 @@ SAVE_DATA_DIR = USER_CONFIG / 'raven-client'
 CONFIG_FILE = SAVE_DATA_DIR / 'config.toml'
 """ Raven Client 的配置目录 """
 
+
+DB_PATH = {
+    "sqlite": f"sqlite+aiosqlite:///{SAVE_DATA_DIR}/raven.db"
+}
+""" Raven Client SQLite 数据库路径 """
+
+
 REQUEST_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br, zstd",
