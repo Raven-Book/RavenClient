@@ -9,10 +9,9 @@ from app.data import app_data
 from app.error.database import UnsupportedDatabaseError
 from app.logger import logger
 from app.model import constants
+from app.model import metadata
 from app.model.data import Config, DatabaseManager
 from app.util.file import new_empty_config
-from app.model import metadata
-
 
 
 @asynccontextmanager

@@ -22,7 +22,7 @@ class Config(BaseModel):
 
 class DatabaseManager:
     def __init__(self, database_url: str):
-        self.engine = create_async_engine(database_url)
+        self.engine = create_async_engine(database_url, echo=True)
         self.async_session = async_sessionmaker(
             self.engine,
             expire_on_commit=False
