@@ -16,6 +16,7 @@ class DataBase(BaseModel):
 
 
 class Config(BaseModel):
+    secret: str = "secret-key"
     apikey: Optional[ApiKey] = ApiKey()
     database: Optional[DataBase] = DataBase()
 
@@ -31,6 +32,7 @@ class DatabaseManager:
 
 @dataclass
 class AppData:
+    hashed_key: Optional[str] = None
     db: Optional[DatabaseManager] = None
     client: Optional[ClientSession] = None
     config: Optional[Config] = None

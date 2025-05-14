@@ -13,20 +13,6 @@ from app.model import Base
 from app.util import time
 
 
-# --- 请求响应模型 ---
-class UserRegisterRequest(BaseModel):
-    username: str
-    password: str
-    email: EmailStr
-
-class UserLoginRequest(BaseModel):
-    username: str
-    password: str
-
-class LoginResponseData(BaseModel):
-    user_id: str
-    username: str
-
 class User(Base):
     __tablename__ = 'user'
 
@@ -39,6 +25,22 @@ class User(Base):
     last_login = Column(DateTime, nullable=True, comment="最后登录时间")
     created_at = Column(DateTime, default=time.utcnow, comment="创建时间")
     updated_at = Column(DateTime, default=time.utcnow, onupdate=time.utcnow, comment="更新时间")
+
+
+class UserRegisterRequest(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponseData(BaseModel):
+    user_id: str
+    username: str
 
 
 async def get_user_by_id(session: async_sessionmaker, user_id: int) -> Optional[User]:

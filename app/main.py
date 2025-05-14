@@ -12,6 +12,7 @@ from app.model import constants
 from app.model import metadata
 from app.model.data import Config, DatabaseManager
 from app.util.file import new_empty_config
+from app.util.auth import generate_password_hash
 
 
 @asynccontextmanager
@@ -20,7 +21,9 @@ async def lifespan(_: FastAPI):
         app_data.client = ClientSession(
             headers=constants.REQUEST_HEADERS
         )
-        app_data.config = Config(**toml.load(constants.CONFIG_FILE))
+        config = app_data.config = Config(**toml.load(constants.CONFIG_FILE))
+
+        app_data.hashed_key = generate_password_hash(config.secret)
 
         database = app_data.config.database
 
@@ -38,7 +41,7 @@ async def lifespan(_: FastAPI):
         new_empty_config(app_data)
         yield
     except Exception as e:
-        logger.error(f"Failed to initialize essential resources: {e}")
+        logger.error(f"Failed to initialize essential resources: {str(e)}")
     finally:
         await app_data.client.close()
 

@@ -1,45 +1,22 @@
-from asyncio import current_task
 from uuid import uuid4
 
-import bcrypt
 from fastapi import APIRouter
 from sqlalchemy import or_
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_scoped_session
 
 from app.data import app_data
 from app.logger import logger
 from app.model import Response, User
-from app.model.data import AppData
 from app.model.user import insert_users, UserLoginRequest, LoginResponseData, UserRegisterRequest
 from app.util import time
+from app.util.auth import generate_password_hash, verify_password
 
 router = APIRouter()
-
-# --- 工具函数 ---
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码"""
-    try:
-        return bcrypt.checkpw(
-            plain_password.encode('utf-8'),
-            hashed_password.encode('utf-8')
-        )
-    except Exception as e:
-        print(f"密码验证失败: {str(e)}")
-        return False
-
-def get_password_hash(password: str) -> str:
-    """生成密码哈希"""
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed.decode('utf-8')
 
 
 @router.post("/login")
 async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | Response[str]:
-    # TODO 登录逻辑
     try:
-        # 查询用户
         async with app_data.db.async_session() as session:
             result = await session.execute(
                 select(User).where(or_(User.username == login_data.username))
@@ -47,15 +24,14 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
             user = result.scalar_one_or_none()
 
             if not user or not verify_password(login_data.password, user.password_hash):
-                logger.error("无效的账号或错误的密码")
                 return Response[LoginResponseData](
-                success=False,
-                message="登录失败",
-                data=LoginResponseData(
-                    user_id=user.id,
-                    username=user.username
+                    success=False,
+                    message="无效的账号或错误的密码",
+                    data=LoginResponseData(
+                        user_id=user.id,
+                        username=user.username
+                    )
                 )
-            )
             user.last_login = time.utcnow()
             await session.commit()
             return Response[LoginResponseData](
@@ -74,11 +50,10 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
             data=str(e)
         )
 
+
 @router.post("/register")
 async def register(user_data: UserRegisterRequest) -> Response[UserRegisterRequest] | Response[str]:
-    # TODO 注册逻辑
     try:
-        # 检查用户是否存在
         async with app_data.db.async_session() as session:
             existing_user = await session.execute(
                 select(User).where(
@@ -91,23 +66,22 @@ async def register(user_data: UserRegisterRequest) -> Response[UserRegisterReque
 
             if existing_user.scalar_one_or_none():
                 return Response(
-                    message="注册失败",
+                    message="用户名或邮箱已存在",
                     data=user_data,
                     success=False
                 )
 
-            # 创建用户对象
             new_user = User(
                 username=user_data.username,
                 email=str(user_data.email),
-                password_hash=get_password_hash(user_data.password),
-                api_key=str(uuid4())  # 生成随机API密钥
+                password_hash=generate_password_hash(user_data.password),
+                api_key=str(uuid4())
             )
 
             await insert_users(app_data.db.async_session, [new_user])
 
     except Exception as e:
-        logger.error("注册用户发生异常：",str(e))
+        logger.error("注册用户发生异常：", str(e))
     return Response(
         message="注册成功",
         data=user_data,
