@@ -41,6 +41,7 @@ class UserLoginRequest(BaseModel):
 class LoginResponseData(BaseModel):
     user_id: str
     username: str
+    api_key: Optional[str]
 
 
 async def get_user_by_id(session: async_sessionmaker, user_id: int) -> Optional[User]:

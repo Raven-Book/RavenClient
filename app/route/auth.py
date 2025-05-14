@@ -18,20 +18,37 @@ router = APIRouter()
 async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | Response[str]:
     try:
         async with app_data.db.async_session() as session:
-            result = await session.execute(
-                select(User).where(or_(User.username == login_data.username))
+            query = select(User).where(
+                or_(
+                    User.username == login_data.username,
+                    User.email == login_data.username  # 支持邮箱登录
+                )
             )
+            result = await session.execute(query)
             user = result.scalar_one_or_none()
 
-            if not user or not verify_password(login_data.password, user.password_hash):
+            if not user:
                 return Response[LoginResponseData](
                     success=False,
-                    message="无效的账号或错误的密码",
+                    message="无效的账号",
                     data=LoginResponseData(
                         user_id=user.id,
-                        username=user.username
+                        username=user.username,
+                        api_key=None
                     )
                 )
+
+            if not verify_password(login_data.password, user.password_hash):
+                return Response[LoginResponseData](
+                    success=False,
+                    message="错误的密码",
+                    data=LoginResponseData(
+                        user_id=user.id,
+                        username=user.username,
+                        api_key=None
+                    )
+                )
+
             user.last_login = time.utcnow()
             await session.commit()
             return Response[LoginResponseData](
@@ -39,7 +56,8 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
                 message="登录成功",
                 data=LoginResponseData(
                     user_id=user.id,
-                    username=user.username
+                    username=user.username,
+                    api_key=user.api_key
                 )
             )
     except Exception as e:
