@@ -15,7 +15,6 @@ SAVE_DATA_DIR = USER_CONFIG / 'raven-client'
 CONFIG_FILE = SAVE_DATA_DIR / 'config.toml'
 """ Raven Client 的配置目录 """
 
-
 DB_PATH = {
     "sqlite": f"sqlite+aiosqlite:///{SAVE_DATA_DIR}/raven.db"
 }

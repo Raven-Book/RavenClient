@@ -1,3 +1,4 @@
+from datetime import timedelta
 from uuid import uuid4
 
 from fastapi import APIRouter
@@ -9,7 +10,7 @@ from app.logger import logger
 from app.model import Response, User
 from app.model.user import insert_users, UserLoginRequest, LoginResponseData, UserRegisterRequest
 from app.util import time
-from app.util.auth import generate_password_hash, verify_password
+from app.util.auth import generate_password_hash, verify_password, generate_access_token
 
 router = APIRouter()
 
@@ -32,9 +33,7 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
                     success=False,
                     message="无效的账号",
                     data=LoginResponseData(
-                        user_id=user.id,
-                        username=user.username,
-                        api_key=None
+                        token=None,
                     )
                 )
 
@@ -43,21 +42,23 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
                     success=False,
                     message="错误的密码",
                     data=LoginResponseData(
-                        user_id=user.id,
-                        username=user.username,
-                        api_key=None
+                        token=None
                     )
                 )
 
             user.last_login = time.utcnow()
             await session.commit()
+            payload = {
+                "sub": user.id,  # 用户唯一标识
+                "exp": (time.utcnow() + timedelta(days=7)).isoformat(),  # 到期时间，7天后过期
+                "iat": time.utcnow().isoformat(), # 签发时间
+            }
+            access_token = generate_access_token(app_data.config.secret, payload)
             return Response[LoginResponseData](
                 success=True,
                 message="登录成功",
                 data=LoginResponseData(
-                    user_id=user.id,
-                    username=user.username,
-                    api_key=user.api_key
+                    token=access_token,
                 )
             )
     except Exception as e:
