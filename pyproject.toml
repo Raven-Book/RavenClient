@@ -15,7 +15,8 @@ dependencies = [
     "pydantic>=2.11.4",
     "sqlalchemy>=2.0.40",
     "bcrypt>=4.3.0",
-    "aiosqlite>=0.21.0"
+    "aiosqlite>=0.21.0",
+    "Pillow>=11.2.1"
 ]
 
 [tool.setuptools]
