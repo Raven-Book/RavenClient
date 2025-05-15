@@ -18,8 +18,7 @@ def get_app_path() -> str:
 def new_empty_config(app_data: AppData):
     os.makedirs(constants.SAVE_DATA_DIR, exist_ok=True)
     with open(constants.CONFIG_FILE, 'w') as f:
-        config = Config()
-        config.secret = secrets.token_hex(16)
-        toml.dump(config.model_dump(), f)
+        config = Config.empty()
+        toml.dump(config.dump(), f)
         app_data.config = config
     logger.info(f'New config file created: {constants.CONFIG_FILE}')
