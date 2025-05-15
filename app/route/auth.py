@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter
@@ -16,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/login")
-async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | Response[str]:
+async def login(login_data: UserLoginRequest) -> Response[Optional[LoginResponseData]]:
     try:
         async with app_data.db.async_session() as session:
             query = select(User).where(
@@ -29,21 +30,17 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
             user = result.scalar_one_or_none()
 
             if not user:
-                return Response[LoginResponseData](
+                return Response(
                     success=False,
                     message="无效的账号",
-                    data=LoginResponseData(
-                        token=None,
-                    )
+                    data=None
                 )
 
             if not verify_password(login_data.password, user.password_hash):
-                return Response[LoginResponseData](
+                return Response(
                     success=False,
                     message="错误的密码",
-                    data=LoginResponseData(
-                        token=None
-                    )
+                    data=None
                 )
 
             user.last_login = time.utcnow()
@@ -53,8 +50,8 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
                 "exp": (time.utcnow() + timedelta(days=7)).isoformat(),  # 到期时间，7天后过期
                 "iat": time.utcnow().isoformat(), # 签发时间
             }
-            access_token = generate_access_token(app_data.config.secret, payload)
-            return Response[LoginResponseData](
+            access_token = generate_access_token(app_data.hashed_key, payload)
+            return Response(
                 success=True,
                 message="登录成功",
                 data=LoginResponseData(
@@ -66,12 +63,12 @@ async def login(login_data: UserLoginRequest) -> Response[LoginResponseData] | R
         return Response(
             success=False,
             message="登录失败",
-            data=str(e)
+            data=None
         )
 
 
 @router.post("/register")
-async def register(user_data: UserRegisterRequest) -> Response[UserRegisterRequest] | Response[str]:
+async def register(user_data: UserRegisterRequest) -> Response[None]:
     try:
         async with app_data.db.async_session() as session:
             existing_user = await session.execute(
@@ -86,7 +83,7 @@ async def register(user_data: UserRegisterRequest) -> Response[UserRegisterReque
             if existing_user.scalar_one_or_none():
                 return Response(
                     message="用户名或邮箱已存在",
-                    data=user_data,
+                    data=None,
                     success=False
                 )
 
@@ -103,6 +100,6 @@ async def register(user_data: UserRegisterRequest) -> Response[UserRegisterReque
         logger.error("注册用户发生异常：", str(e))
     return Response(
         message="注册成功",
-        data=user_data,
+        data=None,
         success=True
     )
