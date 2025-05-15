@@ -12,7 +12,7 @@ from app.model import constants
 from app.model import metadata
 from app.model.data import Config, DatabaseManager
 from app.util.file import new_empty_config
-from app.util.auth import generate_password_hash
+from app.util.auth import generate_password_hash, AuthMiddleware
 
 
 @asynccontextmanager
@@ -52,3 +52,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 route.register(app)
+
+app.add_middleware(
+    AuthMiddleware, # type: ignore
+    exclude_paths=[
+        "auth/login",
+        "auth/register",
+        "/docs",
+        "/openapi.json",
+    ],
+)
