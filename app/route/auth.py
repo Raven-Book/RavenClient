@@ -50,7 +50,7 @@ async def login(login_data: UserLoginRequest) -> Response[Optional[LoginResponse
                 "exp": (time.utcnow() + timedelta(days=7)).isoformat(),  # 到期时间，7天后过期
                 "iat": time.utcnow().isoformat(), # 签发时间
             }
-            access_token = generate_access_token(app_data.hashed_key, payload)
+            access_token = generate_access_token(app_data.config.secret, payload)
             return Response(
                 success=True,
                 message="登录成功",

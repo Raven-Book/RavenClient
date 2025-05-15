@@ -23,8 +23,6 @@ async def lifespan(_: FastAPI):
         )
         config = app_data.config = Config(**toml.load(constants.CONFIG_FILE))
 
-        app_data.hashed_key = generate_password_hash(config.secret)
-
         database = app_data.config.database
 
         if database.type not in constants.DB_PATH:
@@ -56,8 +54,8 @@ route.register(app)
 app.add_middleware(
     AuthMiddleware, # type: ignore
     exclude_paths=[
-        "auth/login",
-        "auth/register",
+        "/auth/login",
+        "/auth/register",
         "/docs",
         "/openapi.json",
     ],

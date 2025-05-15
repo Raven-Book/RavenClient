@@ -148,7 +148,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         try:
-            result = verify_access_token(app_data.hashed_key, token)
+            result = verify_access_token(app_data.config.secret, token)
             if result:
                 return await call_next(request)
         except Exception as e:

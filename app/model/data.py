@@ -32,7 +32,6 @@ class DatabaseManager:
 
 @dataclass
 class AppData:
-    hashed_key: Optional[str] = None
     db: Optional[DatabaseManager] = None
     client: Optional[ClientSession] = None
     config: Optional[Config] = None
