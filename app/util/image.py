@@ -1,6 +1,8 @@
 from PIL import Image
 import base64
 import io
+import cv2
+import numpy as np
 
 from app.logger import logger
 
@@ -24,30 +26,65 @@ def image_to_base64(
     :return: Base64 编码字符串
     """
     try:
-        # 打开并处理图片
-        with Image.open(image_path) as img:
-            # 调整图片尺寸
-            if max_size:
-                img.thumbnail(max_size)
+        # 使用 OpenCV 读取图片进行预处理和压缩
+        img_cv = cv2.imread(image_path)
+        if img_cv is None:
+            raise ValueError("无法读取图片文件")
 
-            # 转换为 RGB 模式（兼容 JPEG）
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
+        # 调整图片尺寸
+        if max_size:
+            img_cv = cv2.resize(img_cv, max_size, interpolation=cv2.INTER_AREA)
 
-            # 保存到内存缓冲区
-            buffer = io.BytesIO()
-            save_args = {'format': format}
-            if format == 'JPEG':
-                save_args['quality'] = quality
-                save_args['optimize'] = True
-            elif format == 'PNG':
-                save_args['optimize'] = True
+        # 转换为 RGB 模式（兼容 JPEG）
+        img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
 
-            img.save(buffer, **save_args)
+        # 转换为 PIL 图像
+        img_pil = Image.fromarray(img_cv)
 
-            # 生成 Base64
-            return base64.b64encode(buffer.getvalue()).decode('utf-8')
+        # 保存到内存缓冲区
+        buffer = io.BytesIO()
+        save_args = {'format': format}
+        if format == 'JPEG':
+            save_args['quality'] = quality
+            save_args['optimize'] = True
+        elif format == 'PNG':
+            save_args['optimize'] = True
+
+        img_pil.save(buffer, **save_args)
+
+        # 生成 Base64
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
     except Exception as e:
         logger.error(f"处理失败: {str(e)}")
         return ""
+
+
+def base64_to_image(base64_str: str, output_path: str):
+    """
+    将 Base64 字符串转换回图片并保存
+
+    参数：
+    :param base64_str: Base64 编码的图片字符串
+    :param output_path: 输出图片文件路径
+
+    返回：
+    :return: None
+    """
+    try:
+        # 解码 Base64
+        img_data = base64.b64decode(base64_str)
+
+        # 使用 OpenCV 处理解码后的数据
+        img_np = np.frombuffer(img_data, dtype=np.uint8)
+        img_cv = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
+
+        if img_cv is None:
+            raise ValueError("解码 Base64 数据失败")
+
+        # 保存图片
+        cv2.imwrite(output_path, img_cv)
+        logger.info(f"图片已保存至: {output_path}")
+
+    except Exception as e:
+        logger.error(f"处理失败: {str(e)}")
